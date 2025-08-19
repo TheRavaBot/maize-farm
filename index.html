@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maize Data Monitor | Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --secondary: #FFC107;
+            --danger: #F44336;
+            --light: #F5F5F5;
+            --dark: #212121;
+            --gray: #757575;
+            --light-gray: #E0E0E0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f9f9f9;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--light-gray);
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 24px;
+            color: var(--primary);
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--light-gray);
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background-color: #d5d5d5;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+        }
+
+        .status-indicator span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .temp-icon {
+            background-color: #FF5722;
+        }
+
+        .humidity-icon {
+            background-color: #2196F3;
+        }
+
+        .gas-icon {
+            background-color: #9C27B0;
+        }
+
+        .emc-icon {
+            background-color: #4CAF50;
+        }
+
+        .di-icon {
+            background-color: #FF9800;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .card-unit {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .card-footer {
+            margin-top: 15px;
+            font-size: 13px;
+            color: var(--gray);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-good {
+            background-color: #E8F5E9;
+            color: var(--primary-dark);
+        }
+
+        .status-warning {
+            background-color: #FFF8E1;
+            color: #FF8F00;
+        }
+
+        .status-danger {
+            background-color: #FFEBEE;
+            color: var(--danger);
+        }
+
+        .chart-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .history-section {
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .history-table-container {
+            overflow-x: auto;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .history-table th {
+            background-color: var(--light);
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .history-table tr:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--light-gray);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .history-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-seedling"></i>
+                <h1>Maize Data Monitor</h1>
+            </div>
+            <div class="header-actions">
+                <button id="settings-btn" class="btn btn-icon">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <div class="status-indicator">
+                    <span class="wifi-status">
+                        <i class="fas fa-wifi"></i>
+                        <span id="wifi-strength">-- dBm</span>
+                    </span>
+                    <span class="last-update">
+                        <i class="far fa-clock"></i>
+                        <span id="last-update">--:--</span>
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard">
+            <section class="realtime-cards">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-line"></i> Realtime Data
+                </h2>
+                <div class="cards-container">
+                    <!-- Temperature Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Temperature</div>
+                            <div class="card-icon temp-icon">
+                                <i class="fas fa-thermometer-half"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="temperature-value">--</div>
+                        <div class="card-unit">°C</div>
+                        <div class="card-footer">
+                            <span>DS18B20 Sensor</span>
+                            <span class="status-badge status-good" id="temp-status">Normal</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Humidity Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Humidity</div>
+                            <div class="card-icon humidity-icon">
+                                <i class="fas fa-tint"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="humidity-value">--</div>
+                        <div class="card-unit">% RH</div>
+                        <div class="card-footer">
+                            <span>DHT11 Sensor</span>
+                            <span class="status-badge status-good" id="humidity-status">Normal</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Gas Level Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Gas Level</div>
+                            <div class="card-icon gas-icon">
+                                <i class="fas fa-smog"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="gas-value">--</div>
+                        <div class="card-unit">% / V</div>
+                        <div class="card-footer">
+                            <span>MQ5 Sensor</span>
+                            <span class="status-badge status-good" id="gas-status">Normal</span>
+                        </div>
+                    </div>
+                    
+                    <!-- EMC Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">EMC</div>
+                            <div class="card-icon emc-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="emc-value">--</div>
+                        <div class="card-unit">%</div>
+                        <div class="card-footer">
+                            <span>Calculated Value</span>
+                            <span class="status-badge status-good" id="emc-status">Normal</span>
+                        </div>
+                    </div>
+                    
+                    <!-- DI Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Deterioration Index</div>
+                            <div class="card-icon di-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="di-value">--</div>
+                        <div class="card-unit">Index</div>
+                        <div class="card-footer">
+                            <span>Calculated Value</span>
+                            <span class="status-badge status-good" id="di-status">Normal</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="chart-container">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-area"></i> Trends
+                </h2>
+                <canvas id="trends-chart"></canvas>
+            </section>
+
+            <section class="history-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-history"></i> History
+                    </h2>
+                    <div class="history-actions">
+                        <button id="export-btn" class="btn btn-secondary">
+                            <i class="fas fa-file-export"></i> Export
+                        </button>
+                        <button id="predict-btn" class="btn btn-secondary">
+                            <i class="fas fa-chart-bar"></i> Predict
+                        </button>
+                    </div>
+                </div>
+                <div class="history-table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Temperature (°C)</th>
+                                <th>Humidity (%RH)</th>
+                                <th>Gas Level</th>
+                                <th>EMC (%)</th>
+                                <th>DI</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body">
+                            <!-- History data will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Settings</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="refresh-interval">Refresh Interval (ms)</label>
+                    <input type="number" id="refresh-interval" class="form-control" value="2000">
+                </div>
+                <div class="form-group">
+                    <label for="temp-threshold">Temperature Threshold (°C)</label>
+                    <input type="number" id="temp-threshold" class="form-control" value="30">
+                </div>
+                <div class="form-group">
+                    <label for="humidity-threshold">Humidity Threshold (%RH)</label>
+                    <input type="number" id="humidity-threshold" class="form-control" value="70">
+                </div>
+                <div class="form-group">
+                    <label for="gas-threshold">Gas Level Threshold (%)</label>
+                    <input type="number" id="gas-threshold" class="form-control" value="50">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-btn">Cancel</button>
+                <button id="save-settings" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prediction Modal -->
+    <div id="prediction-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Deterioration Prediction</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <canvas id="prediction-chart"></canvas>
+                <div id="prediction-result" style="margin-top: 20px; text-align: center; font-weight: 500;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio for alerts -->
+    <audio id="alert-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" preload="auto"></audio>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+            authDomain: "project-iot-51262.firebaseapp.com",
+            databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+            projectId: "project-iot-51262",
+            storageBucket: "project-iot-51262.appspot.com",
+            messagingSenderId: "785303672386",
+            appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const dbRef = database.ref('/uniib_elect/maize_farm/');
+
+        // DOM Elements
+        const cardsContainer = document.querySelector('.cards-container');
+        const historyBody = document.getElementById('history-body');
+        const settingsModal = document.getElementById('settings-modal');
+        const predictionModal = document.getElementById('prediction-modal');
+        const settingsBtn = document.getElementById('settings-btn');
+        const closeBtns = document.querySelectorAll('.close-btn');
+        const saveSettingsBtn = document.getElementById('save-settings');
+        const exportBtn = document.getElementById('export-btn');
+        const predictBtn = document.getElementById('predict-btn');
+        const wifiStrengthEl = document.getElementById('wifi-strength');
+        const lastUpdateEl = document.getElementById('last-update');
+        const alertSound = document.getElementById('alert-sound');
+
+        // Realtime data elements
+        const tempValueEl = document.getElementById('temperature-value');
+        const humidityValueEl = document.getElementById('humidity-value');
+        const gasValueEl = document.getElementById('gas-value');
+        const emcValueEl = document.getElementById('emc-value');
+        const diValueEl = document.getElementById('di-value');
+        const tempStatusEl = document.getElementById('temp-status');
+        const humidityStatusEl = document.getElementById('humidity-status');
+        const gasStatusEl = document.getElementById('gas-status');
+        const emcStatusEl = document.getElementById('emc-status');
+        const diStatusEl = document.getElementById('di-status');
+
+        // Global Variables
+        let refreshInterval = 2000;
+        let tempThreshold = 30;
+        let humidityThreshold = 70;
+        let gasThreshold = 50;
+        let historyData = [];
+        let trendsChart;
+        let predictionChart;
+
+        // Initialize the application
+        function initApp() {
+            // Initialize charts
+            initCharts();
+            
+            // Set up realtime listeners
+            setupRealtimeListeners();
+            
+            // Load history data
+            loadHistoryData();
+            
+            // Set up event listeners
+            setupEventListeners();
+        }
+
+        // Initialize charts
+        function initCharts() {
+            const trendsCtx = document.getElementById('trends-chart').getContext('2d');
+            
+            trendsChart = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Temperature (°C)',
+                            data: [],
+                            borderColor: '#FF5722',
+                            backgroundColor: 'rgba(255, 87, 34, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Humidity (%RH)',
+                            data: [],
+                            borderColor: '#2196F3',
+                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Gas Level (%)',
+                            data: [],
+                            borderColor: '#9C27B0',
+                            backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Temp/Humidity'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            title: {
+                                display: true,
+                                text: 'Gas Level'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Set up realtime data listeners
+        function setupRealtimeListeners() {
+            // Listen for realtime data changes
+            dbRef.child('realtime').on('value', (snapshot) => {
+                const realtimeData = snapshot.val();
+                
+                if (realtimeData) {
+                    // Update last update time
+                    const lastUpdate = realtimeData?.timestamp || '--:--';
+                    lastUpdateEl.textContent = formatTimestamp(lastUpdate);
+                    
+                    // Update sensor values
+                    if (realtimeData.temperature !== undefined) {
+                        tempValueEl.textContent = realtimeData.temperature.toFixed(1);
+                        updateStatus(tempStatusEl, realtimeData.temperature, tempThreshold, 5);
+                    }
+                    
+                    if (realtimeData.humidity !== undefined) {
+                        humidityValueEl.textContent = realtimeData.humidity.toFixed(1);
+                        updateStatus(humidityStatusEl, realtimeData.humidity, humidityThreshold, 10);
+                    }
+                    
+                    if (realtimeData.gas_percentage !== undefined) {
+                        gasValueEl.textContent = `${realtimeData.gas_percentage.toFixed(1)} / ${realtimeData.gas_value?.toFixed(2) || '--'}`;
+                        updateStatus(gasStatusEl, realtimeData.gas_percentage, gasThreshold, 10);
+                    }
+                    
+                    if (realtimeData.emc !== undefined) {
+                        emcValueEl.textContent = realtimeData.emc.toFixed(2);
+                        updateStatus(emcStatusEl, realtimeData.emc, 15, 5); // Example thresholds for EMC
+                    }
+                    
+                    if (realtimeData.deterioration_index !== undefined) {
+                        diValueEl.textContent = realtimeData.deterioration_index.toFixed(2);
+                        updateDiStatus(diStatusEl, realtimeData.deterioration_index);
+                    }
+                    
+                    // Update trends chart
+                    updateTrendsChart(realtimeData);
+                }
+            });
+        }
+
+        // Update status badge based on value and threshold
+        function updateStatus(element, value, threshold, range = 5) {
+            if (value > threshold + range) {
+                element.textContent = 'High';
+                element.className = 'status-badge status-danger';
+                playAlert();
+            } else if (value > threshold) {
+                element.textContent = 'Warning';
+                element.className = 'status-badge status-warning';
+            } else {
+                element.textContent = 'Normal';
+                element.className = 'status-badge status-good';
+            }
+        }
+
+        // Update DI status badge
+        function updateDiStatus(element, value) {
+            if (value > 60) {
+                element.textContent = 'Danger!';
+                element.className = 'status-badge status-danger';
+                playAlert();
+            } else if (value > 30) {
+                element.textContent = 'Warning';
+                element.className = 'status-badge status-warning';
+            } else {
+                element.textContent = 'Good';
+                element.className = 'status-badge status-good';
+            }
+        }
+
+        // Play alert sound
+        function playAlert() {
+            alertSound.currentTime = 0;
+            alertSound.play().catch(e => console.log('Audio play failed:', e));
+        }
+
+        // Update trends chart with new data
+        function updateTrendsChart(data) {
+            const now = new Date();
+            const timeLabel = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Limit to 20 data points for performance
+            if (trendsChart.data.labels.length >= 20) {
+                trendsChart.data.labels.shift();
+                trendsChart.data.datasets.forEach(dataset => {
+                    dataset.data.shift();
+                });
+            }
+            
+            // Add new data
+            trendsChart.data.labels.push(timeLabel);
+            
+            if (data.temperature !== undefined) {
+                trendsChart.data.datasets[0].data.push(data.temperature);
+            }
+            
+            if (data.humidity !== undefined) {
+                trendsChart.data.datasets[1].data.push(data.humidity);
+            }
+            
+            if (data.gas_percentage !== undefined) {
+                trendsChart.data.datasets[2].data.push(data.gas_percentage);
+            }
+            
+            trendsChart.update();
+        }
+
+        // Load history data
+        function loadHistoryData() {
+            dbRef.child('history').limitToLast(10).once('value').then((snapshot) => {
+                historyData = [];
+                snapshot.forEach(childSnapshot => {
+                    const data = childSnapshot.val();
+                    historyData.push({
+                        timestamp: data.timestamp || childSnapshot.key,
+                        temperature: data.temperature || '--',
+                        humidity: data.humidity || '--',
+                        gas_value: data.gas_value || '--',
+                        gas_percentage: data.gas_percentage || '--',
+                        emc: data.emc || '--',
+                        di: data.deterioration_index || '--'
+                    });
+                });
+                
+                // Reverse to show latest first
+                historyData.reverse();
+                updateHistoryTable();
+            }).catch(error => {
+                console.error('Error loading history:', error);
+            });
+        }
+
+        // Update history table
+        function updateHistoryTable() {
+            historyBody.innerHTML = '';
+            
+            historyData.forEach(item => {
+                const row = document.createElement('tr');
+                
+                // Determine status based on DI
+                let statusText, statusClass;
+                if (item.di > 60) {
+                    statusText = 'Danger';
+                    statusClass = 'status-danger';
+                } else if (item.di > 30) {
+                    statusText = 'Warning';
+                    statusClass = 'status-warning';
+                } else {
+                    statusText = 'Good';
+                    statusClass = 'status-good';
+                }
+                
+                row.innerHTML = `
+                    <td>${formatTimestamp(item.timestamp)}</td>
+                    <td>${item.temperature !== '--' ? item.temperature.toFixed(1) : '--'}</td>
+                    <td>${item.humidity !== '--' ? item.humidity.toFixed(1) : '--'}</td>
+                    <td>${item.gas_percentage !== '--' ? item.gas_percentage.toFixed(1) : '--'}</td>
+                    <td>${item.emc !== '--' ? item.emc.toFixed(2) : '--'}</td>
+                    <td>${item.di !== '--' ? item.di.toFixed(2) : '--'}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                `;
+                
+                historyBody.appendChild(row);
+            });
+        }
+
+        // Helper function to format timestamp
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return '--:--';
+            
+            // If already formatted
+            if (typeof timestamp === 'string' && (timestamp.includes(':') || timestamp.includes('-'))) {
+                return timestamp;
+            }
+            
+            // If it's a timestamp number or Firebase push ID
+            try {
+                let date;
+                if (/^\d{14}$/.test(timestamp)) {
+                    // Firebase push ID format (YYYYMMDDHHmmss)
+                    const year = timestamp.substring(0, 4);
+                    const month = timestamp.substring(4, 6);
+                    const day = timestamp.substring(6, 8);
+                    const hour = timestamp.substring(8, 10);
+                    const minute = timestamp.substring(10, 12);
+                    const second = timestamp.substring(12, 14);
+                    date = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`);
+                } else {
+                    // Unix timestamp
+                    date = new Date(typeof timestamp === 'number' ? timestamp : parseInt(timestamp) * 1000);
+                }
+                
+                return date.toLocaleString([], {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return timestamp;
+            }
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Settings button
+            settingsBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'flex';
+            });
+            
+            // Close buttons
+            closeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    settingsModal.style.display = 'none';
+                    predictionModal.style.display = 'none';
+                });
+            });
+            
+            // Save settings
+            saveSettingsBtn.addEventListener('click', () => {
+                refreshInterval = parseInt(document.getElementById('refresh-interval').value) || 2000;
+                tempThreshold = parseInt(document.getElementById('temp-threshold').value) || 30;
+                humidityThreshold = parseInt(document.getElementById('humidity-threshold').value) || 70;
+                gasThreshold = parseInt(document.getElementById('gas-threshold').value) || 50;
+                
+                settingsModal.style.display = 'none';
+            });
+            
+            // Export button
+            exportBtn.addEventListener('click', exportData);
+            
+            // Predict button
+            predictBtn.addEventListener('click', showPrediction);
+            
+            // Close modals when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === settingsModal) {
+                    settingsModal.style.display = 'none';
+                }
+                if (e.target === predictionModal) {
+                    predictionModal.style.display = 'none';
+                }
+            });
+        }
+
+        // Export data as CSV
+        function exportData() {
+            let csv = 'Timestamp,Temperature (°C),Humidity (%RH),Gas Level (%),EMC (%),DI,Status\n';
+            
+            historyData.forEach(item => {
+                const status = item.di > 60 ? 'Danger' : item.di > 30 ? 'Warning' : 'Good';
+                csv += `"${formatTimestamp(item.timestamp)}",${item.temperature || '--'},${item.humidity || '--'},${item.gas_percentage || '--'},${item.emc || '--'},${item.di || '--'},"${status}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `maize_data_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Show prediction modal
+        function showPrediction() {
+            predictionModal.style.display = 'flex';
+            
+            // Simple linear regression prediction based on DI trend
+            if (historyData.length >= 3) {
+                const diValues = historyData.map(item => item.di).filter(val => val !== '--');
+                const timestamps = historyData.map((_, i) => i).filter((_, i) => historyData[i].di !== '--');
+                
+                if (diValues.length >= 3) {
+                    // Calculate linear regression
+                    const n = diValues.length;
+                    const sumX = timestamps.reduce((a, b) => a + b, 0);
+                    const sumY = diValues.reduce((a, b) => a + b, 0);
+                    const sumXY = timestamps.reduce((a, x, i) => a + x * diValues[i], 0);
+                    const sumXX = timestamps.reduce((a, x) => a + x * x, 0);
+                    
+                    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+                    const intercept = (sumY - slope * sumX) / n;
+                    
+                    // Predict next 5 points
+                    const futureTimestamps = [...timestamps];
+                    const futureDiValues = [...diValues];
+                    const predictions = [];
+                    
+                    for (let i = 1; i <= 5; i++) {
+                        futureTimestamps.push(timestamps[timestamps.length - 1] + i);
+                        const predictedValue = slope * futureTimestamps[futureTimestamps.length - 1] + intercept;
+                        futureDiValues.push(predictedValue);
+                        predictions.push(predictedValue);
+                    }
+                    
+                    // Update prediction chart
+                    updatePredictionChart(timestamps, diValues, futureTimestamps, futureDiValues);
+                    
+                    // Show prediction result
+                    const resultEl = document.getElementById('prediction-result');
+                    const criticalPoint = predictions.findIndex(val => val > 60);
+                    
+                    if (criticalPoint >= 0) {
+                        resultEl.innerHTML = `<span style="color: #F44336;">Warning: Maize may deteriorate in ${criticalPoint + 1} time periods!</span>`;
+                    } else {
+                        resultEl.innerHTML = '<span style="color: #4CAF50;">Good condition expected in near future</span>';
+                    }
+                }
+            }
+        }
+
+        // Update prediction chart
+        function updatePredictionChart(timestamps, diValues, futureTimestamps, futureDiValues) {
+            const predictionCtx = document.getElementById('prediction-chart').getContext('2d');
+            
+            // Destroy previous chart if exists
+            if (predictionChart) {
+                predictionChart.destroy();
+            }
+            
+            predictionChart = new Chart(predictionCtx, {
+                type: 'line',
+                data: {
+                    labels: [...timestamps.map((_, i) => `T-${timestamps.length - i - 1}`), 'Now', 'T+1', 'T+2', 'T+3', 'T+4', 'T+5'],
+                    datasets: [
+                        {
+                            label: 'Actual DI',
+                            data: [...diValues, ...Array(futureTimestamps.length - timestamps.length).fill(null)],
+                            borderColor: '#2196F3',
+                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Predicted DI',
+                            data: [...Array(timestamps.length).fill(null), ...futureDiValues.slice(timestamps.length)],
+                            borderColor: '#FF9800',
+                            backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                            borderDash: [5, 5],
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Danger Threshold',
+                            data: Array(timestamps.length + 6).fill(60),
+                            borderColor: '#F44336',
+                            backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                            borderWidth: 1,
+                            borderDash: [3, 3],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Deterioration Index Prediction'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw?.toFixed(2) || '--'}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Deterioration Index'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
