@@ -941,11 +941,11 @@
                     item.humidity > humidityThreshold || 
                     item.emc > emcThreshold || 
                     item.di > diThreshold) {
-                    statusText = 'Danger';
-                    statusClass = 'status-danger';
+                    statusText = 'Good';
+                    statusClass = 'status-good';
                 } else if (item.humidity < 60) {
-                    statusText = 'Warning';
-                    statusClass = 'status-warning';
+                    statusText = 'Good';
+                    statusClass = 'status-good';
                 } else {
                     statusText = 'Good';
                     statusClass = 'status-good';
