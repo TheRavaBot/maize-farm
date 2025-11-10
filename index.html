@@ -471,7 +471,7 @@
                             </div>
                         </div>
                         <div class="card-value" id="gas-value">--</div>
-                        <div class="card-unit">% / V</div>
+                        <div class="card-unit">%</div>
                         <div class="card-footer">
                             <span>MQ5 Sensor</span>
                             <span class="status-badge status-good" id="gas-status">Normal</span>
@@ -503,7 +503,7 @@
                             </div>
                         </div>
                         <div class="card-value" id="di-value">--</div>
-                        <div class="card-unit">Index</div>
+                        <div class="card-unit">%</div>
                         <div class="card-footer">
                             <span>Calculated Value</span>
                             <span class="status-badge status-good" id="di-status">Normal</span>
@@ -540,9 +540,9 @@
                                 <th>Timestamp</th>
                                 <th>Temperature (°C)</th>
                                 <th>Humidity (%RH)</th>
-                                <th>Gas Level</th>
+                                <th>Gas Level (%)</th>
                                 <th>EMC (%)</th>
-                                <th>DI</th>
+                                <th>DI (%)</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -578,6 +578,14 @@
                 <div class="form-group">
                     <label for="gas-threshold">Gas Level Threshold (%)</label>
                     <input type="number" id="gas-threshold" class="form-control" value="50">
+                </div>
+                <div class="form-group">
+                    <label for="emc-threshold">EMC Threshold (%)</label>
+                    <input type="number" id="emc-threshold" class="form-control" value="15">
+                </div>
+                <div class="form-group">
+                    <label for="di-threshold">DI Threshold (%)</label>
+                    <input type="number" id="di-threshold" class="form-control" value="0.5" step="0.1">
                 </div>
             </div>
             <div class="modal-footer">
@@ -658,6 +666,8 @@
         let tempThreshold = 30;
         let humidityThreshold = 70;
         let gasThreshold = 50;
+        let emcThreshold = 15;
+        let diThreshold = 0.5;
         let historyData = [];
         let trendsChart;
         let predictionChart;
@@ -759,27 +769,29 @@
                     // Update sensor values
                     if (realtimeData.temperature !== undefined) {
                         tempValueEl.textContent = realtimeData.temperature.toFixed(1);
-                        updateStatus(tempStatusEl, realtimeData.temperature, tempThreshold, 5);
+                        updateTempStatus(realtimeData.temperature);
                     }
                     
                     if (realtimeData.humidity !== undefined) {
                         humidityValueEl.textContent = realtimeData.humidity.toFixed(1);
-                        updateStatus(humidityStatusEl, realtimeData.humidity, humidityThreshold, 10);
+                        updateHumidityStatus(realtimeData.humidity);
                     }
                     
                     if (realtimeData.gas_percentage !== undefined) {
-                        gasValueEl.textContent = `${realtimeData.gas_percentage.toFixed(1)} / ${realtimeData.gas_value?.toFixed(2) || '--'}`;
+                        gasValueEl.textContent = realtimeData.gas_percentage.toFixed(1);
                         updateStatus(gasStatusEl, realtimeData.gas_percentage, gasThreshold, 10);
                     }
                     
                     if (realtimeData.emc !== undefined) {
                         emcValueEl.textContent = realtimeData.emc.toFixed(2);
-                        updateStatus(emcStatusEl, realtimeData.emc, 15, 5); // Example thresholds for EMC
+                        updateEmcStatus(realtimeData.emc);
                     }
                     
                     if (realtimeData.deterioration_index !== undefined) {
-                        diValueEl.textContent = realtimeData.deterioration_index.toFixed(2);
-                        updateDiStatus(diStatusEl, realtimeData.deterioration_index);
+                        // Convert DI to percentage if needed
+                        const diValue = realtimeData.deterioration_index;
+                        diValueEl.textContent = diValue.toFixed(2);
+                        updateDiStatus(diValue);
                     }
                     
                     // Update trends chart
@@ -788,7 +800,58 @@
             });
         }
 
-        // Update status badge based on value and threshold
+        // Update temperature status based on threshold
+        function updateTempStatus(value) {
+            if (value > tempThreshold) {
+                tempStatusEl.textContent = 'High';
+                tempStatusEl.className = 'status-badge status-danger';
+                playAlert();
+            } else {
+                tempStatusEl.textContent = 'Good';
+                tempStatusEl.className = 'status-badge status-good';
+            }
+        }
+
+        // Update humidity status based on threshold
+        function updateHumidityStatus(value) {
+            if (value < 60) {
+                humidityStatusEl.textContent = 'Low';
+                humidityStatusEl.className = 'status-badge status-warning';
+            } else if (value > humidityThreshold) {
+                humidityStatusEl.textContent = 'High';
+                humidityStatusEl.className = 'status-badge status-danger';
+                playAlert();
+            } else {
+                humidityStatusEl.textContent = 'Good';
+                humidityStatusEl.className = 'status-badge status-good';
+            }
+        }
+
+        // Update EMC status based on threshold
+        function updateEmcStatus(value) {
+            if (value > emcThreshold) {
+                emcStatusEl.textContent = 'High';
+                emcStatusEl.className = 'status-badge status-danger';
+                playAlert();
+            } else {
+                emcStatusEl.textContent = 'Good';
+                emcStatusEl.className = 'status-badge status-good';
+            }
+        }
+
+        // Update DI status based on threshold
+        function updateDiStatus(value) {
+            if (value > diThreshold) {
+                diStatusEl.textContent = 'Unstable';
+                diStatusEl.className = 'status-badge status-danger';
+                playAlert();
+            } else {
+                diStatusEl.textContent = 'Stable';
+                diStatusEl.className = 'status-badge status-good';
+            }
+        }
+
+        // Generic status update function
         function updateStatus(element, value, threshold, range = 5) {
             if (value > threshold + range) {
                 element.textContent = 'High';
@@ -799,21 +862,6 @@
                 element.className = 'status-badge status-warning';
             } else {
                 element.textContent = 'Normal';
-                element.className = 'status-badge status-good';
-            }
-        }
-
-        // Update DI status badge
-        function updateDiStatus(element, value) {
-            if (value > 60) {
-                element.textContent = 'Danger!';
-                element.className = 'status-badge status-danger';
-                playAlert();
-            } else if (value > 30) {
-                element.textContent = 'Warning';
-                element.className = 'status-badge status-warning';
-            } else {
-                element.textContent = 'Good';
                 element.className = 'status-badge status-good';
             }
         }
@@ -887,12 +935,15 @@
             historyData.forEach(item => {
                 const row = document.createElement('tr');
                 
-                // Determine status based on DI
+                // Determine status based on thresholds
                 let statusText, statusClass;
-                if (item.di > 60) {
+                if (item.temperature > tempThreshold || 
+                    item.humidity > humidityThreshold || 
+                    item.emc > emcThreshold || 
+                    item.di > diThreshold) {
                     statusText = 'Danger';
                     statusClass = 'status-danger';
-                } else if (item.di > 30) {
+                } else if (item.humidity < 60) {
                     statusText = 'Warning';
                     statusClass = 'status-warning';
                 } else {
@@ -973,6 +1024,8 @@
                 tempThreshold = parseInt(document.getElementById('temp-threshold').value) || 30;
                 humidityThreshold = parseInt(document.getElementById('humidity-threshold').value) || 70;
                 gasThreshold = parseInt(document.getElementById('gas-threshold').value) || 50;
+                emcThreshold = parseInt(document.getElementById('emc-threshold').value) || 15;
+                diThreshold = parseFloat(document.getElementById('di-threshold').value) || 0.5;
                 
                 settingsModal.style.display = 'none';
             });
@@ -996,10 +1049,14 @@
 
         // Export data as CSV
         function exportData() {
-            let csv = 'Timestamp,Temperature (°C),Humidity (%RH),Gas Level (%),EMC (%),DI,Status\n';
+            let csv = 'Timestamp,Temperature (°C),Humidity (%RH),Gas Level (%),EMC (%),DI (%),Status\n';
             
             historyData.forEach(item => {
-                const status = item.di > 60 ? 'Danger' : item.di > 30 ? 'Warning' : 'Good';
+                const status = (item.temperature > tempThreshold || 
+                               item.humidity > humidityThreshold || 
+                               item.emc > emcThreshold || 
+                               item.di > diThreshold) ? 'Danger' : 
+                              (item.humidity < 60) ? 'Warning' : 'Good';
                 csv += `"${formatTimestamp(item.timestamp)}",${item.temperature || '--'},${item.humidity || '--'},${item.gas_percentage || '--'},${item.emc || '--'},${item.di || '--'},"${status}"\n`;
             });
             
@@ -1051,7 +1108,7 @@
                     
                     // Show prediction result
                     const resultEl = document.getElementById('prediction-result');
-                    const criticalPoint = predictions.findIndex(val => val > 60);
+                    const criticalPoint = predictions.findIndex(val => val > diThreshold);
                     
                     if (criticalPoint >= 0) {
                         resultEl.innerHTML = `<span style="color: #F44336;">Warning: Maize may deteriorate in ${criticalPoint + 1} time periods!</span>`;
@@ -1092,8 +1149,8 @@
                             tension: 0.4
                         },
                         {
-                            label: 'Danger Threshold',
-                            data: Array(timestamps.length + 6).fill(60),
+                            label: 'Stability Threshold',
+                            data: Array(timestamps.length + 6).fill(diThreshold),
                             borderColor: '#F44336',
                             backgroundColor: 'rgba(244, 67, 54, 0.1)',
                             borderWidth: 1,
@@ -1122,7 +1179,7 @@
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'Deterioration Index'
+                                text: 'Deterioration Index (%)'
                             }
                         }
                     }
