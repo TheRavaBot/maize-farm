@@ -789,7 +789,7 @@
                     
                     if (realtimeData.deterioration_index !== undefined) {
                         // Convert DI to percentage if needed
-                        const diValue = realtimeData.deterioration_index;
+                        const diValue = realtimeData.deterioration_index/100;
                         diValueEl.textContent = diValue.toFixed(2);
                         updateDiStatus(diValue);
                     }
